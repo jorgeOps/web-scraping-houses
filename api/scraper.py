@@ -182,6 +182,10 @@ async def get_property_detail(prop_id: str) -> Optional[PropertyDetail]:
             if x not in seen:
                 unique_images.append(x)
                 seen.add(x)
+        
+        # Remove the last image if it exists (often a floor plan)
+        if unique_images:
+            unique_images.pop()
 
         # Title & Price Extraction (Improved)
         title = soup.title.string if soup.title else "Propiedad"

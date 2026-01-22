@@ -21,7 +21,21 @@ def read_root():
 async def list_properties():
     try:
         data = await get_properties()
-        return data
+        
+        # TEMPORARY: Filter specific properties by Request
+        ALLOWED_NUMBERS = {
+            "3450", "3492", "3239", "3282", "3377", 
+            "3351", "3533", "3528", "3514", "3008", "1735"
+        }
+        
+        filtered_data = []
+        for prop in data:
+            # Check if property ID (e.g., 'ref-3450') ends with any of the allowed numbers
+            # This handles both 'ref-3450' and potentially '3450' formats
+            if any(prop.id.endswith(num) for num in ALLOWED_NUMBERS):
+                filtered_data.append(prop)
+                
+        return filtered_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
