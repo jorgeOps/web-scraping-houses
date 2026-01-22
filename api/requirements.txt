@@ -5,3 +5,4 @@ httpx
 requests
 pydantic
 lxml
+html5lib

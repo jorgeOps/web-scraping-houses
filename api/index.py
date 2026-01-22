@@ -37,7 +37,10 @@ async def list_properties():
                 
         return filtered_data
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        traceback.print_exc()
+        print(f"CRITICAL ERROR in list_properties: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 @app.get("/api/properties/{prop_id}")
 async def property_detail(prop_id: str):
