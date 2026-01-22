@@ -67,7 +67,7 @@ async def get_properties() -> List[Property]:
         response = await client.get(LISTING_URL, headers=HEADERS)
         response.raise_for_status()
         
-        soup = BeautifulSoup(response.content, 'lxml')
+        soup = BeautifulSoup(response.content, 'html.parser')
         properties = []
         
         rows = soup.select("table#infoListado tbody tr")
@@ -141,7 +141,7 @@ async def get_property_detail(prop_id: str) -> Optional[PropertyDetail]:
             return None
         response.raise_for_status()
         
-        soup = BeautifulSoup(response.content, 'lxml')
+        soup = BeautifulSoup(response.content, 'html.parser')
         
         # Description
         description = ""

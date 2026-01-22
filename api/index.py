@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from .scraper import get_properties, Property
+from .scraper import get_properties, Property, get_property_detail
 from typing import List
 
 app = FastAPI()
@@ -28,7 +28,6 @@ async def list_properties():
 @app.get("/api/properties/{prop_id}")
 async def property_detail(prop_id: str):
     try:
-        from .scraper import get_property_detail
         data = await get_property_detail(prop_id)
         if not data:
             raise HTTPException(status_code=404, detail="Property not found")
