@@ -3,6 +3,7 @@
 import { Property } from "@/types/property";
 import Image from "next/image";
 import Link from "next/link";
+import { formatPriceDual } from "@/lib/utils";
 
 interface PropertyCardProps {
     property: Property;
@@ -11,6 +12,8 @@ interface PropertyCardProps {
 export function PropertyCard({ property }: PropertyCardProps) {
     // Format ID to look like "REF-1052"
     const displayRef = property.id.toUpperCase().replace("REF-", "REF ");
+
+    const prices = formatPriceDual(property.price);
 
     return (
         <div className="group cursor-pointer border border-transparent hover:border-gray-200 p-4 transition-all duration-300">
@@ -59,8 +62,14 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     </div>
 
                     {/* Price */}
-                    <div className="pt-2 mt-1 border-t border-gray-100 text-lg font-medium text-black">
-                        {property.price}
+                    <div className="pt-2 mt-1 border-t border-gray-100">
+                        <div className="text-lg font-medium text-black">{prices.euro}</div>
+                        {prices.xaf && (
+                            <div className="flex flex-col mt-1">
+                                <span className="text-sm text-gray-600 font-light leading-none">{prices.xaf}</span>
+                                <span className="text-[10px] text-gray-400 font-light mt-0.5">{prices.rate}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </Link>

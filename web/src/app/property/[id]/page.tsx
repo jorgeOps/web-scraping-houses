@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { formatPriceDual } from "@/lib/utils";
 // Removed Framer Motion and Lucide for a simpler look, using standard HTML entities or basic text
 
 interface PropertyDetail {
@@ -81,10 +82,20 @@ export default function PropertyDetailPage() {
                     <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-black leading-tight">{property.title}</h1>
                     <p className="text-base md:text-lg text-gray-700 mt-1">Ref: {property.id} | Madrid</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex flex-col items-end gap-2">
                     <p className="text-2xl font-bold text-black border-2 border-black px-4 py-2 inline-block">
                         {property.price}
                     </p>
+                    {property.price && (() => {
+                        const prices = formatPriceDual(property.price);
+                        if (!prices.xaf) return null;
+                        return (
+                            <div className="text-right">
+                                <p className="text-lg text-gray-700 font-light">{prices.xaf}</p>
+                                <p className="text-xs text-gray-500 font-light mt-1">{prices.rate}</p>
+                            </div>
+                        );
+                    })()}
                 </div>
             </header>
 
