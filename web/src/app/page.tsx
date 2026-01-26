@@ -34,6 +34,13 @@ export default function Home() {
       }
 
       return price >= min && price <= max;
+    }).sort((a, b) => {
+      const getVal = (p: string) => {
+        if (!p || p.toLowerCase().includes("consultar")) return Infinity;
+        const num = parseInt(p.replace(/[^0-9]/g, ''));
+        return isNaN(num) ? Infinity : num;
+      };
+      return getVal(a.price) - getVal(b.price);
     });
   }, [properties, minPrice, maxPrice]);
 
