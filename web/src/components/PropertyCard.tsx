@@ -5,9 +5,10 @@ import { formatPriceDual } from "@/lib/utils";
 
 interface PropertyCardProps {
     property: Property;
+    showDualCurrency?: boolean;
 }
 
-export function PropertyCard({ property }: PropertyCardProps) {
+export function PropertyCard({ property, showDualCurrency = true }: PropertyCardProps) {
     // Format ID to look like "Ref 1052"
     const displayRef = "Ref " + property.id.replace(/ref[- ]?/i, "");
 
@@ -39,7 +40,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
                         </div>
 
                         {/* Right: XAF Price & Rate */}
-                        {prices.xaf && (
+                        {showDualCurrency && prices.xaf && (
                             <div className="text-right leading-none">
                                 <div className="text-sm font-bold text-gray-600">
                                     {prices.xaf}

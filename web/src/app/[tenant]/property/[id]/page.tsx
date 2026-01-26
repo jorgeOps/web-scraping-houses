@@ -23,16 +23,23 @@ interface PropertyDetail {
 
 export default function PropertyDetailPage() {
     const params = useParams();
+    // params.tenant will vary if we use [tenant] layout
+    const propId = params.id as string;
+    const tenant = params.tenant as string;
+
     const [property, setProperty] = useState<PropertyDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
     const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
+    // Determine config based on tenant
+    const showDualCurrency = tenant !== "tenant-02"; // tenant-02 is EURO only
+
     useEffect(() => {
         async function fetchDetail() {
             try {
-                const res = await fetch(`/api/properties/${params.id}`);
+                const res = await fetch(`/api/properties/${propId}`);
                 if (!res.ok) throw new Error("Property not found");
                 const data = await res.json();
                 setProperty(data);
@@ -42,8 +49,8 @@ export default function PropertyDetailPage() {
                 setLoading(false);
             }
         }
-        if (params.id) fetchDetail();
-    }, [params.id]);
+        if (propId) fetchDetail();
+    }, [propId]);
 
     const openLightbox = (index: number) => setSelectedImageIndex(index);
     const closeLightbox = () => setSelectedImageIndex(null);
@@ -86,7 +93,7 @@ export default function PropertyDetailPage() {
                     <p className="text-2xl font-bold text-black border-2 border-black px-4 py-2 inline-block">
                         {property.price}
                     </p>
-                    {property.price && (() => {
+                    {property.price && showDualCurrency && (() => {
                         const prices = formatPriceDual(property.price);
                         if (!prices.xaf) return null;
                         return (
@@ -166,8 +173,6 @@ export default function PropertyDetailPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Footer / Contact for Brochure */}
 
             {/* Lightbox Overlay */}
             {selectedImageIndex !== null && property && (

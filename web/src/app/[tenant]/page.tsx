@@ -2,10 +2,18 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { Property } from "@/types/property";
 import { PropertyCard } from "@/components/PropertyCard";
 
 export default function Home() {
+  const params = useParams();
+  const tenant = params.tenant as string;
+
+  // Tenant Configuration
+  const filterMode = tenant === "tenant-01" ? "limited" : "all";
+  const showDualCurrency = tenant !== "tenant-02"; // tenant-02 is EURO only
+
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -47,7 +55,7 @@ export default function Home() {
   useEffect(() => {
     async function fetchProperties() {
       try {
-        const res = await fetch("/api/properties");
+        const res = await fetch(`/api/properties?mode=${filterMode}`);
         if (!res.ok) throw new Error("Failed to fetch properties");
         const data = await res.json();
         setProperties(data);
@@ -59,7 +67,7 @@ export default function Home() {
     }
 
     fetchProperties();
-  }, []);
+  }, [filterMode]);
 
   return (
     <main className="min-h-screen bg-white text-black font-serif p-4 md:p-12">
@@ -152,7 +160,7 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
             {filteredProperties.map((prop) => (
-              <PropertyCard key={prop.id} property={prop} />
+              <PropertyCard key={prop.id} property={prop} showDualCurrency={showDualCurrency} />
             ))}
           </div>
         )}

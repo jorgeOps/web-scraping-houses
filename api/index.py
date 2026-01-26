@@ -18,10 +18,13 @@ def read_root():
     return {"message": "Hello from Python Backend!"}
 
 @app.get("/api/properties", response_model=List[Property])
-async def list_properties():
+async def list_properties(mode: str = "limited"):
     try:
         data = await get_properties()
         
+        if mode == "all":
+            return data
+
         # TEMPORARY: Filter specific properties by Request
         ALLOWED_NUMBERS = {
             "3450", "3492", "3239", "3282", "3377", 
