@@ -23,7 +23,7 @@ export function formatPriceDual(priceString: string | undefined | null) {
 
     if (isNaN(val)) return { euro: priceString, xaf: "", rate: "" };
 
-    const conversionRate = 655.957;
+    const conversionRate = 650;
     const xafVal = Math.round(val * conversionRate);
 
     // Format Back
@@ -33,6 +33,6 @@ export function formatPriceDual(priceString: string | undefined | null) {
     return {
         euro: euroFormatted,
         xaf: xafFormatted,
-        rate: "1 € = 656 FCFA"
+        rate: "1 € = 650 FCFA (aprox)"
     };
 }

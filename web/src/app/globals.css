@@ -8,25 +8,37 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --font-sans: "Arial", "Helvetica Neue", sans-serif;
+}
+
+/* Force Arial everywhere */
+* {
+  font-family: "Arial", sans-serif !important;
+  font-variant-numeric: lining-nums tabular-nums !important;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Times New Roman", Times, serif;
-  -webkit-font-smoothing: auto;
-  -moz-osx-font-smoothing: auto;
+  /* Fallback if * selector doesn't catch something (unlikely) */
+  font-family: "Arial", sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: "Arial", sans-serif; /* Headers can be Sans-Serif like typical reports */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Arial", sans-serif !important;
   font-weight: bold;
-  text-transform: uppercase;
+  /* Removed text-transform: uppercase */
   color: #333;
 }
 
 a {
-    text-decoration: underline;
-    color: #0000EE; /* Default link blue */
+  text-decoration: none;
+  color: inherit;
 }
-

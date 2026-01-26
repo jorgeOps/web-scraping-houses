@@ -79,8 +79,8 @@ export default function PropertyDetailPage() {
             <header className="border-b-2 border-black pb-4 mb-6 md:mb-8 flex flex-col md:flex-row justify-between md:items-end gap-4">
                 <div>
                     <Link href="/" className="text-sm text-gray-600 underline mb-2 block print:hidden">&lt; Volver al listado</Link>
-                    <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-black leading-tight">{property.title}</h1>
-                    <p className="text-base md:text-lg text-gray-700 mt-1">Ref: {property.id} | Madrid</p>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-wide text-black leading-tight">{property.title}</h1>
+                    <p className="text-base md:text-lg text-gray-700 mt-1">Ref {property.id.replace(/ref[- ]?/i, "")} | Madrid</p>
                 </div>
                 <div className="text-right flex flex-col items-end gap-2">
                     <p className="text-2xl font-bold text-black border-2 border-black px-4 py-2 inline-block">
@@ -112,7 +112,7 @@ export default function PropertyDetailPage() {
                                     className="object-cover transition-opacity group-hover:opacity-90"
                                     unoptimized
                                 />
-                                <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 uppercase opacity-0 group-hover:opacity-100 transition-opacity">Ampliar</div>
+                                <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Ampliar</div>
                             </>
                         ) : (
                             <div className="flex items-center justify-center h-full text-gray-400">Sin foto principal</div>
@@ -132,7 +132,7 @@ export default function PropertyDetailPage() {
 
                 {/* Right Column: Details & Description */}
                 <div>
-                    <h2 className="text-lg font-bold border-b border-black mb-3 uppercase">Resumen de Características</h2>
+                    <h2 className="text-lg font-bold border-b border-black mb-3">Resumen de Características</h2>
                     <table className="w-full text-sm mb-6 border-collapse">
                         <tbody>
                             <tr className="border-b border-gray-300">
@@ -157,9 +157,12 @@ export default function PropertyDetailPage() {
                         </tbody>
                     </table>
 
-                    <h2 className="text-lg font-bold border-b border-black mb-3 uppercase">Descripción</h2>
+                    <h2 className="text-lg font-bold border-b border-black mb-3">Descripción</h2>
                     <div className="text-sm text-justify leading-relaxed whitespace-pre-line text-gray-800">
-                        {property.description}
+                        {property.description
+                            .replace(/OBS\s*&\s*WCH/g, "CBS-TWCH")
+                            .replace(/(\s)WCH(\s|:|\.|,)/g, "$1TWCH$2")
+                        }
                     </div>
                 </div>
             </div>
