@@ -125,7 +125,7 @@ export default function Home() {
         const y = parseInt(restoreY);
         // Wait for render cycle
         setTimeout(() => {
-          window.scrollTo({ top: y, behavior: 'auto' }); // Instant jump
+          window.scrollTo({ top: y, behavior: 'smooth' }); // Smooth scroll
           sessionStorage.removeItem("scroll-pos-restore");
         }, 100);
       }
