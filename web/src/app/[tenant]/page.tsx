@@ -73,42 +73,62 @@ export default function Home() {
     });
   }, [properties, minPrice, maxPrice, sortOrder]);
 
+  // Effect to load state from session storage on mount/tenant change
   useEffect(() => {
-    const cacheKey = `properties-v2-${filterMode}`;
+    const cacheKeyProps = `properties-v2-${filterMode}`;
+    const cacheKeySort = `prefs-sort-${tenant}`;
+    const cacheKeyMin = `prefs-min-${tenant}`;
+    const cacheKeyMax = `prefs-max-${tenant}`;
 
-    // Try to load from cache first to fix scroll restoration
+    // Restore UI State
     try {
-      const cached = sessionStorage.getItem(cacheKey);
-      if (cached) {
-        setProperties(JSON.parse(cached));
-        setLoading(false);
-      }
-    } catch (e) {
-      // ignore storage errors
-    }
+      const s = sessionStorage.getItem(cacheKeySort);
+      const mn = sessionStorage.getItem(cacheKeyMin);
+      const mx = sessionStorage.getItem(cacheKeyMax);
+      if (s) setSortOrder(s as 'asc' | 'desc');
+      if (mn) setMinPrice(mn);
+      if (mx) setMaxPrice(mx);
+    } catch { }
 
-    async function fetchProperties() {
+    // Restore Properties & Fetch
+    async function loadData() {
+      let hasCache = false;
+      try {
+        const cached = sessionStorage.getItem(cacheKeyProps);
+        if (cached) {
+          setProperties(JSON.parse(cached));
+          setLoading(false);
+          hasCache = true;
+        }
+      } catch (e) { }
+
       try {
         const res = await fetch(`/api/properties?mode=${filterMode}`);
         if (!res.ok) throw new Error("Failed to fetch properties");
         const data = await res.json();
-        setProperties(data);
 
-        // Update cache
-        try {
-          sessionStorage.setItem(cacheKey, JSON.stringify(data));
-        } catch (e) {
-          // ignore
-        }
+        // Only update if different or no cache (simple check: length)
+        // Actually always update to be fresh, but we already showed cached data so it's fine.
+        setProperties(data);
+        sessionStorage.setItem(cacheKeyProps, JSON.stringify(data));
+
+        if (!hasCache) setLoading(false);
       } catch (err: any) {
         setError(err.message);
-      } finally {
         setLoading(false);
       }
     }
 
-    fetchProperties();
-  }, [filterMode]);
+    loadData();
+  }, [filterMode, tenant]);
+
+  // Effect to save UI state changes
+  useEffect(() => {
+    if (!tenant) return;
+    sessionStorage.setItem(`prefs-sort-${tenant}`, sortOrder);
+    sessionStorage.setItem(`prefs-min-${tenant}`, minPrice);
+    sessionStorage.setItem(`prefs-max-${tenant}`, maxPrice);
+  }, [sortOrder, minPrice, maxPrice, tenant]);
 
   return (
     <main className="min-h-screen bg-white text-black font-serif p-4 md:p-12">
