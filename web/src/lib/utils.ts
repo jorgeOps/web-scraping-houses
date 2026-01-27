@@ -28,11 +28,11 @@ export function formatPriceDual(priceString: string | undefined | null) {
 
     // Format Back
     const euroFormatted = priceString; // Keep original formatting
-    const xafFormatted = new Intl.NumberFormat('es-ES').format(xafVal) + " FCFA";
+    const xafFormatted = new Intl.NumberFormat('es-ES').format(xafVal) + " Fcfa";
 
     return {
         euro: euroFormatted,
         xaf: xafFormatted,
-        rate: "1 € = 650 FCFA (aprox)"
+        rate: "1 € = 650 Fcfa (aprox)"
     };
 }
