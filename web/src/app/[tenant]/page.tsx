@@ -117,6 +117,18 @@ export default function Home() {
         setError(err.message);
         setLoading(false);
       }
+
+      // Restore Scroll Position if coming back from detail
+      // We check session storage for the marker
+      const restoreY = sessionStorage.getItem("scroll-pos-restore");
+      if (restoreY) {
+        const y = parseInt(restoreY);
+        // Wait for render cycle
+        setTimeout(() => {
+          window.scrollTo({ top: y, behavior: 'auto' }); // Instant jump
+          sessionStorage.removeItem("scroll-pos-restore");
+        }, 100);
+      }
     }
 
     loadData();

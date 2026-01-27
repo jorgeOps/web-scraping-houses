@@ -16,7 +16,12 @@ export function PropertyCard({ property, showDualCurrency = true }: PropertyCard
 
     return (
         <div className="group cursor-pointer border border-transparent hover:border-gray-200 p-4 transition-all duration-300">
-            <Link href={`/property/${property.id}`}>
+            <Link
+                href={`/property/${property.id}`}
+                onClick={() => {
+                    sessionStorage.setItem("scroll-pos-restore", window.scrollY.toString());
+                }}
+            >
                 {/* Image */}
                 <div className="relative aspect-[4/3] w-full bg-gray-100 mb-4 overflow-hidden">
                     <Image
