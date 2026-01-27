@@ -22,6 +22,22 @@ async def list_properties(mode: str = "limited"):
     try:
         data = await get_properties()
         
+        # Filter out rentals globally as per user requirement
+        # Check against title and price
+        sale_properties = []
+        for prop in data:
+            title_lower = prop.title.lower() if prop.title else ""
+            price_lower = prop.price.lower() if prop.price else ""
+            
+            if "alquiler" in title_lower:
+                continue
+            if "/mes" in price_lower or "mensual" in price_lower:
+                continue
+            
+            sale_properties.append(prop)
+            
+        data = sale_properties
+
         if mode == "all":
             return data
 

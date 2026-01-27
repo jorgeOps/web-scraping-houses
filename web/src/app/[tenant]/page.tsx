@@ -19,9 +19,18 @@ export default function Home() {
   const [error, setError] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const filteredProperties = useMemo(() => {
     return properties.filter(prop => {
+      // 1. Exclude Rentals explicitly
+      // Use normalization to handle accents (Ático -> Atico)
+      const cleanTitle = prop.title?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
+      const cleanPrice = prop.price?.toLowerCase() || "";
+
+      if (cleanTitle.includes("alquiler")) return false;
+      if (cleanPrice.includes("/mes") || cleanPrice.includes("mensual")) return false;
+
       const parsePrice = (priceStr: string) => {
         if (!priceStr || priceStr.toLowerCase().includes("consultar")) return -1;
         const num = parseInt(priceStr.replace(/[^0-9]/g, ''));
@@ -29,14 +38,22 @@ export default function Home() {
       };
 
       const price = parsePrice(prop.price);
-      // Clean dots before parsing integer from filtering inputs
+
+      // 2. Strict Price Filter: No houses < 1.000.000€
+      // Note: "Consultar" properties (price == -1) are kept unless filtered by min/max manually?
+      // User said "NO se muestren casas con precio inferior a 1.000.000".
+      // Usually "Consultar" implies high price, so we keep them unless logic dictates otherwise.
+      if (price !== -1 && price < 1000000) return false;
+
+      // 3. User Interface Filter (Min/Max)
       const cleanMin = minPrice.replace(/\./g, '');
       const cleanMax = maxPrice.replace(/\./g, '');
-
       const min = cleanMin ? parseInt(cleanMin) : 0;
       const max = cleanMax ? parseInt(cleanMax) : Infinity;
 
       if (price === -1) {
+        // If price is hidden, we usually show it unless user sets a specific max filter that might exclude it?
+        // Let's keep "Consultar" visible unless user tries to filter strictly.
         if (minPrice || maxPrice) return false;
         return true;
       }
@@ -44,21 +61,45 @@ export default function Home() {
       return price >= min && price <= max;
     }).sort((a, b) => {
       const getVal = (p: string) => {
-        if (!p || p.toLowerCase().includes("consultar")) return Infinity;
+        if (!p || p.toLowerCase().includes("consultar")) return sortOrder === 'asc' ? Infinity : -Infinity;
         const num = parseInt(p.replace(/[^0-9]/g, ''));
-        return isNaN(num) ? Infinity : num;
+        return isNaN(num) ? (sortOrder === 'asc' ? Infinity : -Infinity) : num;
       };
-      return getVal(a.price) - getVal(b.price);
+
+      const valA = getVal(a.price);
+      const valB = getVal(b.price);
+
+      return sortOrder === 'asc' ? valA - valB : valB - valA;
     });
-  }, [properties, minPrice, maxPrice]);
+  }, [properties, minPrice, maxPrice, sortOrder]);
 
   useEffect(() => {
+    const cacheKey = `properties-v2-${filterMode}`;
+
+    // Try to load from cache first to fix scroll restoration
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        setProperties(JSON.parse(cached));
+        setLoading(false);
+      }
+    } catch (e) {
+      // ignore storage errors
+    }
+
     async function fetchProperties() {
       try {
         const res = await fetch(`/api/properties?mode=${filterMode}`);
         if (!res.ok) throw new Error("Failed to fetch properties");
         const data = await res.json();
         setProperties(data);
+
+        // Update cache
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify(data));
+        } catch (e) {
+          // ignore
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -91,59 +132,86 @@ export default function Home() {
             CBS les ofrece el Portfolio de viviendas en venta gestionadas por TWCH en el exclusivo Barrio de Salamanca (Madrid, España)
           </div>
 
-          {/* Right: Filter (integrated here) */}
-          <div className="shrink-0 relative group">
-            <summary className="cursor-pointer hover:text-black list-none flex items-center gap-2 select-none" onClick={(e) => {
-              const details = e.currentTarget.nextElementSibling;
-              if (details) details.classList.toggle('hidden');
-            }}>
-              Filtrar por precio <span className="text-[10px] transform group-hover:rotate-180 transition-transform">▼</span>
-            </summary>
+          {/* Right: Filter & Sort */}
+          <div className="flex items-center gap-6 shrink-0">
+            {/* Sort Dropdown */}
+            <div className="relative group">
+              <summary className="cursor-pointer hover:text-black list-none flex items-center gap-2 select-none" onClick={(e) => {
+                const details = e.currentTarget.nextElementSibling;
+                if (details) details.classList.toggle('hidden');
+              }}>
+                Ordenar por precio <span className="text-[10px] transform group-hover:rotate-180 transition-transform">▼</span>
+              </summary>
+              <div className="hidden absolute right-0 top-full mt-2 bg-white border border-gray-200 p-2 shadow-lg z-10 w-40 flex flex-col gap-2">
+                <button
+                  onClick={() => { setSortOrder('asc'); }}
+                  className={`text-xs text-left px-2 py-1 hover:bg-gray-100 ${sortOrder === 'asc' ? 'font-bold' : ''}`}
+                >
+                  Menor a mayor
+                </button>
+                <button
+                  onClick={() => { setSortOrder('desc'); }}
+                  className={`text-xs text-left px-2 py-1 hover:bg-gray-100 ${sortOrder === 'desc' ? 'font-bold' : ''}`}
+                >
+                  Mayor a menor
+                </button>
+              </div>
+            </div>
 
             {/* Filter Dropdown */}
-            <div className="hidden absolute right-0 top-full mt-2 bg-white border border-gray-200 p-4 shadow-lg z-10 w-64 flex flex-col gap-3">
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] uppercase text-gray-400">Mínimo</label>
-                <input
-                  type="text"
-                  className="p-1 border border-gray-300 w-full text-black"
-                  value={minPrice}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/\./g, '').replace(/[^0-9]/g, '');
-                    if (!raw) {
-                      setMinPrice("");
-                      return;
-                    }
-                    const formatted = new Intl.NumberFormat('es-ES').format(parseInt(raw));
-                    setMinPrice(formatted);
-                  }}
-                />
+            <div className="relative group">
+              <summary className="cursor-pointer hover:text-black list-none flex items-center gap-2 select-none" onClick={(e) => {
+                const details = e.currentTarget.nextElementSibling;
+                if (details) details.classList.toggle('hidden');
+              }}>
+                Filtrar por precio <span className="text-[10px] transform group-hover:rotate-180 transition-transform">▼</span>
+              </summary>
+
+              {/* Filter Dropdown */}
+              <div className="hidden absolute right-0 top-full mt-2 bg-white border border-gray-200 p-4 shadow-lg z-10 w-64 flex flex-col gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] uppercase text-gray-400">Mínimo</label>
+                  <input
+                    type="text"
+                    className="p-1 border border-gray-300 w-full text-black"
+                    value={minPrice}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+                      if (!raw) {
+                        setMinPrice("");
+                        return;
+                      }
+                      const formatted = new Intl.NumberFormat('es-ES').format(parseInt(raw));
+                      setMinPrice(formatted);
+                    }}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] uppercase text-gray-400">Máximo</label>
+                  <input
+                    type="text"
+                    className="p-1 border border-gray-300 w-full text-black"
+                    value={maxPrice}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+                      if (!raw) {
+                        setMaxPrice("");
+                        return;
+                      }
+                      const formatted = new Intl.NumberFormat('es-ES').format(parseInt(raw));
+                      setMaxPrice(formatted);
+                    }}
+                  />
+                </div>
+                {(minPrice || maxPrice) && (
+                  <button
+                    onClick={() => { setMinPrice(""); setMaxPrice(""); }}
+                    className="text-xs text-red-500 hover:text-red-700 text-right mt-1"
+                  >
+                    Limpiar filtro
+                  </button>
+                )}
               </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] uppercase text-gray-400">Máximo</label>
-                <input
-                  type="text"
-                  className="p-1 border border-gray-300 w-full text-black"
-                  value={maxPrice}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/\./g, '').replace(/[^0-9]/g, '');
-                    if (!raw) {
-                      setMaxPrice("");
-                      return;
-                    }
-                    const formatted = new Intl.NumberFormat('es-ES').format(parseInt(raw));
-                    setMaxPrice(formatted);
-                  }}
-                />
-              </div>
-              {(minPrice || maxPrice) && (
-                <button
-                  onClick={() => { setMinPrice(""); setMaxPrice(""); }}
-                  className="text-xs text-red-500 hover:text-red-700 text-right mt-1"
-                >
-                  Limpiar filtro
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -151,6 +219,8 @@ export default function Home() {
 
       {/* Grid - Looks like photo cards on a board */}
       <section>
+
+
         {loading ? (
           <div className="text-center py-20 text-gray-500 italic">Cargando catálogo...</div>
         ) : error ? (

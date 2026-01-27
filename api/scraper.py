@@ -111,6 +111,13 @@ async def get_properties() -> List[Property]:
                 bedrooms = get_data("dormitorios")
                 bathrooms = get_data("banos")
                 
+                # Filter out rentals at source
+                # If there is no sale price, but there is a rental price, it is a rental.
+                price_rent_span = row.find("span", attrs={"data-info": "precioAlquiler"})
+                if (not price_span or not price) and price_rent_span:
+                    # It's a rental
+                    continue
+                
                 prop_id = detail_url.split("/")[-1] if detail_url else "unknown"
 
                 properties.append(Property(
