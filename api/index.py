@@ -44,7 +44,7 @@ async def list_properties(mode: str = "limited"):
         # TEMPORARY: Filter specific properties by Request
         ALLOWED_NUMBERS = {
             "3450", "3492", "3239", "3282", "3377", 
-            "3351", "3533", "3528", "3514", "3008", "1735"
+            "3351", "3533", "3528", "3514", "3008"
         }
         
         filtered_data = []
